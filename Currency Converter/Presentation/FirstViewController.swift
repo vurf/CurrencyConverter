@@ -16,8 +16,10 @@ class FirstViewController: UIViewController, UIPickerViewDataSource, UIPickerVie
     @IBOutlet weak var pickerTo : UIPickerView!
     @IBOutlet weak var activityIndicator : UIActivityIndicatorView!
     
-    let apiService : ApiService = ApiService()
-    let parseService : ParseService = ParseService()
+    private lazy var currencyService: ICurrencyService = {
+        let requestManager: IRequestManager = RequestManager()
+        return CurrencyService(requestManager: requestManager)
+    }()
     
     var currencies : [String] = [String]()
     
@@ -52,14 +54,13 @@ class FirstViewController: UIViewController, UIPickerViewDataSource, UIPickerVie
     }
     
     func retriveCurrencyRate(baseCurrency: String, toCurrency: String, completion: @escaping (String) -> Void) {
-        self.apiService.requestCurrencyRates(baseCurrency: baseCurrency) {[weak self] (data, error) in
+        currencyService.loadCurrencies(currency: baseCurrency) { [weak self] (result) in
             var string = "No currency retrived!"
-            if let currentError = error {
-                string = currentError.localizedDescription
-            } else {
-                if let strongSelf = self {
-                    string = strongSelf.parseService.parseCurrencyRatesResponse(data: data, toCurrency: toCurrency, baseCurrency: baseCurrency)
-                }
+            switch result {
+            case .error(let error):
+                string = error.localizedDescription
+            case .success(let model):
+                string = model.rate
             }
             
             completion(string)
