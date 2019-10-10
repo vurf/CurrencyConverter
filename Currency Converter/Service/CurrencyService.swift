@@ -9,7 +9,7 @@
 import Foundation
 
 public protocol ICurrencyService {
-    
+    func loadCurrencies(currency: String, completion: @escaping(Result<CurrencyRate>) -> Void)
 }
 
 final class CurrencyService: ICurrencyService {
@@ -20,7 +20,9 @@ final class CurrencyService: ICurrencyService {
         self.requestManager = requestManager
     }
     
-    func loadCurrencies(completion: @escaping(Result<>) -> Void) {
-        
+    func loadCurrencies(currency: String, completion: @escaping(Result<CurrencyRate>) -> Void) {
+        let request = CurrencyRateRequest(currency: currency)
+        let config = RequestConfig(request: request, parser: CurrencyRateParser())
+        requestManager.send(requestConfig: config, completionHandler: completion)
     }
 }
